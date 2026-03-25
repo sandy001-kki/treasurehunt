@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎉 Treasure Hunt Winner!</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+:root{
+  --gold:   #FFD700;
+  --mag:    #E040FB;
+  --cyan:   #00E5FF;
+  --bg:     #05091a;
+  --font:   'Space Grotesk', system-ui, sans-serif;
+}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--bg);
+  font-family:var(--font);
+  min-height:100vh;
+  overflow-x:hidden;
+  color:#fff;
+}
+
+/* ── Canvas ── */
+#canvas{
+  position:fixed;inset:0;
+  width:100%;height:100%;
+  z-index:0;pointer-events:none;
+}
+
+/* ══════════════════════════════
+   SCREEN 1 — CELEBRATION
+══════════════════════════════ */
+#main-screen{
+  position:relative;z-index:10;
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  align-items:center;
+  padding:50px 18px 70px;
+}
+
+/* ── Hero heading ── */
+.hero{
+  text-align:center;
+  animation:fadeUp .9s ease both;
+}
+
+.emoji-burst{
+  font-size:clamp(2.2rem,9vw,4rem);
+  display:block;margin-bottom:14px;
+  animation:popIn .7s cubic-bezier(.34,1.56,.64,1) both .15s;
+  filter:drop-shadow(0 0 18px rgba(255,215,0,.5));
+}
+@keyframes popIn{from{transform:scale(0);opacity:0}to{transform:scale(1);opacity:1}}
+
+.main-title{
+  font-size:clamp(2rem,8vw,3.8rem);
+  font-weight:700;
+  line-height:1.18;
+  letter-spacing:-.5px;
+  /* Shimmer gradient text */
+  background:linear-gradient(90deg,
+    #FFD700 0%, #FF6B35 20%, var(--mag) 40%,
+    var(--cyan) 60%, #FFD700 80%, var(--mag) 100%);
+  background-size:250% auto;
+  -webkit-background-clip:text;
+  background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:shimmer 4s linear infinite, fadeUp .9s ease both .1s;
+}
+@keyframes shimmer{to{background-position:250% center}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+
+.subtitle{
+  font-size:clamp(.9rem,3vw,1.15rem);
+  font-weight:400;
+  color:rgba(255,215,0,.7);
+  margin-top:14px;
+  animation:fadeUp .9s ease both .25s;
+}
+
+/* ── Countdown ── */
+#cd-area{
+  margin-top:48px;
+  text-align:center;
+  animation:fadeUp 1s ease both .45s;
+  transition:opacity .5s;
+}
+
+.cd-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(255,255,255,.07);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:100px;
+  padding:11px 26px;
+  font-size:clamp(.95rem,3vw,1.1rem);
+  font-weight:500;color:#fff;
+  margin-bottom:18px;
+  box-shadow:0 0 20px rgba(255,215,0,.06);
+}
+.cd-num{
+  color:var(--gold);
+  font-weight:700;
+  font-size:1.25em;
+  min-width:2ch;
+  display:inline-block;
+  text-shadow:0 0 12px rgba(255,215,0,.5);
+  animation:numPulse 1s ease-in-out infinite;
+}
+@keyframes numPulse{0%,100%{text-shadow:0 0 10px rgba(255,215,0,.4)}50%{text-shadow:0 0 24px rgba(255,215,0,.9)}}
+
+.prog-track{
+  width:clamp(200px,65vw,360px);
+  height:6px;
+  background:rgba(255,255,255,.08);
+  border-radius:100px;
+  overflow:hidden;
+  margin:0 auto;
+}
+.prog-bar{
+  height:100%;width:100%;
+  background:linear-gradient(90deg,var(--gold),var(--mag),var(--cyan));
+  border-radius:100px;
+  transition:width 1s linear;
+  box-shadow:0 0 10px rgba(255,215,0,.45);
+}
+
+/* ── Form wrap ── */
+#form-wrap{
+  width:100%;max-width:500px;
+  margin-top:36px;
+  display:none;
+}
+#form-wrap.show{
+  display:block;
+  animation:slideUp .8s cubic-bezier(.34,1.2,.64,1) both;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(55px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Glass card ── */
+.glass-card{
+  background:rgba(255,255,255,.055);
+  backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:28px;
+  padding:clamp(24px,5.5vw,38px) clamp(20px,5.5vw,34px);
+  box-shadow:
+    0 10px 48px rgba(0,0,0,.5),
+    0 0 0 1px rgba(255,215,0,.055),
+    inset 0 1.5px 0 rgba(255,255,255,.08);
+}
+
+.card-title{
+  text-align:center;
+  font-size:clamp(1rem,4vw,1.3rem);
+  font-weight:600;
+  color:var(--gold);
+  margin-bottom:26px;
+  letter-spacing:.3px;
+  text-shadow:0 0 18px rgba(255,215,0,.3);
+}
+
+.field{margin-bottom:17px}
+
+.field label{
+  display:block;
+  font-size:.73rem;font-weight:600;
+  color:rgba(255,255,255,.5);
+  text-transform:uppercase;letter-spacing:.9px;
+  margin-bottom:7px;
+}
+
+.field input,
+.field select{
+  width:100%;
+  padding:13px 16px;
+  font-size:16px;/* iOS no-zoom */
+  font-family:var(--font);font-weight:400;
+  color:#fff;
+  background:rgba(255,255,255,.06);
+  border:1.5px solid rgba(255,255,255,.1);
+  border-radius:14px;
+  outline:none;
+  min-height:50px;
+  cursor:pointer;
+  transition:border-color .25s,background .25s,box-shadow .25s;
+  -webkit-appearance:none;appearance:none;
+}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9'%3E%3Cpath d='M1 1l6 6 6-6' stroke='rgba(255,255,255,.45)' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 16px center;
+  padding-right:44px;
+}
+.field select option{background:#0d1133;color:#fff}
+.field input:focus,.field select:focus{
+  border-color:rgba(255,215,0,.55);
+  background:rgba(255,255,255,.1);
+  box-shadow:0 0 0 3px rgba(255,215,0,.12),0 0 18px rgba(255,215,0,.07);
+}
+.field input::placeholder{color:rgba(255,255,255,.22)}
+.field input.err,.field select.err{
+  border-color:rgba(255,80,80,.75);
+  box-shadow:0 0 0 3px rgba(255,80,80,.14);
+}
+.err-msg{
+  font-size:.72rem;color:#ff7070;
+  margin-top:5px;padding-left:2px;
+  display:none;
+}
+.err-msg.on{display:block}
+
+/* ── Submit button ── */
+.submit-btn{
+  width:100%;padding:15px;
+  margin-top:10px;
+  font-family:var(--font);font-size:clamp(1rem,3vw,1.1rem);font-weight:700;
+  color:#fff;letter-spacing:.3px;
+  background:linear-gradient(135deg,#FFD700 0%,#FF6B35 45%,var(--mag) 100%);
+  border:none;border-radius:16px;
+  min-height:54px;cursor:pointer;
+  text-shadow:0 1px 3px rgba(0,0,0,.35);
+  box-shadow:0 4px 26px rgba(255,107,53,.4),0 0 0 1px rgba(255,215,0,.14);
+  position:relative;overflow:hidden;
+  transition:transform .2s,box-shadow .2s;
+}
+.submit-btn::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.24) 50%,transparent 100%);
+  transform:translateX(-100%);transition:transform .55s ease;
+}
+.submit-btn:hover::before{transform:translateX(100%)}
+.submit-btn:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(255,107,53,.55),0 0 0 1px rgba(255,215,0,.22)}
+.submit-btn:active{transform:translateY(0)}
+
+/* ══════════════════════════════
+   SCREEN 2 — VICTORY
+══════════════════════════════ */
+#victory{
+  display:none;position:fixed;inset:0;z-index:30;
+  align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(5,9,26,.62);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+#victory.on{display:flex;animation:vFade .65s ease both}
+@keyframes vFade{from{opacity:0}to{opacity:1}}
+
+.v-card{
+  width:100%;max-width:520px;
+  background:rgba(5,9,26,.82);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border:1.5px solid rgba(255,215,0,.28);
+  border-radius:32px;
+  padding:clamp(32px,6vw,56px) clamp(24px,6vw,48px);
+  text-align:center;
+  box-shadow:
+    0 0 70px rgba(255,215,0,.18),
+    0 0 140px rgba(224,64,251,.09),
+    0 28px 64px rgba(0,0,0,.65);
+  animation:vPop .7s cubic-bezier(.34,1.56,.64,1) both .08s;
+}
+@keyframes vPop{from{transform:scale(.55);opacity:0}to{transform:scale(1);opacity:1}}
+
+.trophy{
+  font-size:clamp(72px,18vw,116px);
+  display:block;margin-bottom:8px;
+  animation:trophySway 2.2s ease-in-out infinite;
+  filter:drop-shadow(0 0 24px rgba(255,215,0,.6));
+}
+@keyframes trophySway{0%,100%{transform:rotate(-6deg) scale(1)}50%{transform:rotate(6deg) scale(1.1)}}
+
+.v-eyebrow{
+  font-size:.75rem;font-weight:600;
+  letter-spacing:3.5px;text-transform:uppercase;
+  color:rgba(255,215,0,.55);margin-bottom:6px;
+}
+
+.v-headline{
+  font-size:clamp(1.55rem,6vw,2.5rem);
+  font-weight:700;color:var(--gold);
+  text-shadow:0 0 28px rgba(255,215,0,.45);
+  animation:glowPulse 2s ease-in-out infinite;
+  margin-bottom:22px;
+}
+@keyframes glowPulse{
+  0%,100%{text-shadow:0 0 22px rgba(255,215,0,.45)}
+  50%{text-shadow:0 0 44px rgba(255,215,0,.8),0 0 80px rgba(255,107,53,.35)}
+}
+
+/* Name box */
+.v-name-box{
+  background:rgba(255,215,0,.055);
+  border:1px solid rgba(255,215,0,.18);
+  border-radius:18px;
+  padding:16px 22px;
+  margin-bottom:22px;
+}
+.v-name-label{
+  font-size:.68rem;color:rgba(255,255,255,.38);
+  letter-spacing:1.5px;text-transform:uppercase;
+  margin-bottom:5px;
+}
+.v-name{
+  font-size:clamp(1.6rem,6.5vw,2.7rem);
+  font-weight:700;
+  background:linear-gradient(90deg,#FFD700,#FF6B35,var(--mag));
+  background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+  animation:shimmer 3s linear infinite;
+}
+
+.v-msg{
+  font-size:clamp(.88rem,3vw,1rem);
+  color:rgba(255,255,255,.78);
+  line-height:1.72;
+}
+.v-msg strong{color:var(--gold)}
+
+.v-divider{
+  display:flex;align-items:center;gap:12px;
+  margin:20px 0;opacity:.3;
+}
+.v-divider::before,.v-divider::after{content:'';flex:1;height:1px;background:var(--gold)}
+.v-divider span{font-size:1rem}
+
+.v-emojis{
+  font-size:1.7rem;letter-spacing:14px;
+  display:block;
+}
+
+/* ── Submit button states ── */
+.submit-btn:disabled{
+  opacity:.7;cursor:not-allowed;transform:none!important;
+}
+.submit-btn.loading::after{
+  content:'';display:inline-block;
+  width:16px;height:16px;
+  border:2px solid rgba(255,255,255,.35);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .7s linear infinite;
+  vertical-align:middle;margin-left:10px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Toast notification ── */
+#toast{
+  position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:rgba(255,80,80,.92);
+  backdrop-filter:blur(12px);
+  color:#fff;font-family:var(--font);font-size:.85rem;font-weight:500;
+  padding:11px 22px;border-radius:100px;
+  z-index:200;opacity:0;
+  transition:opacity .3s,transform .3s;
+  white-space:nowrap;pointer-events:none;
+}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Sound hint ── */
+#sound-hint{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  font-size:.7rem;color:rgba(255,255,255,.32);
+  z-index:100;pointer-events:none;white-space:nowrap;
+  transition:opacity .5s;font-family:var(--font);
+}
+
+/* ── Reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<!-- ═══ SCREEN 1 ═══ -->
+<div id="main-screen">
+
+  <div class="hero">
+    <span class="emoji-burst">🎉 ✨ 🎉</span>
+    <h1 class="main-title">Congratulations!<br>You Found It!</h1>
+    <p class="subtitle">You are one of the rare few to discover the hidden treasure!</p>
+  </div>
+
+  <!-- Countdown (visible for 20s) -->
+  <div id="cd-area">
+    <div class="cd-badge">
+      🎯 Claim your prize in <span class="cd-num" id="cd-num">20</span>s
+    </div>
+    <div class="prog-track">
+      <div class="prog-bar" id="prog-bar"></div>
+    </div>
+  </div>
+
+  <!-- Form (hidden for 20s) -->
+  <div id="form-wrap">
+    <div class="glass-card">
+      <div class="card-title">🏆 Register Your Victory</div>
+      <form id="form" novalidate>
+
+        <div class="field">
+          <label for="f-name">Full Name</label>
+          <input id="f-name" type="text" placeholder="Enter your full name" autocomplete="name">
+          <div class="err-msg" id="e-name">Please enter your full name</div>
+        </div>
+
+        <div class="field">
+          <label for="f-year">Year</label>
+          <select id="f-year">
+            <option value="">Select your year</option>
+            <option>1st Year</option>
+            <option>2nd Year</option>
+            <option>3rd Year</option>
+            <option>4th Year</option>
+          </select>
+          <div class="err-msg" id="e-year">Please select your year</div>
+        </div>
+
+        <div class="field">
+          <label for="f-reg">Register Number</label>
+          <input id="f-reg" type="text" placeholder="e.g. 22CS001" autocomplete="off">
+          <div class="err-msg" id="e-reg">Please enter your register number</div>
+        </div>
+
+        <div class="field">
+          <label for="f-sec">Section</label>
+          <input id="f-sec" type="text" placeholder="e.g. A, B, C" maxlength="5" autocomplete="off">
+          <div class="err-msg" id="e-sec">Please enter your section</div>
+        </div>
+
+        <div class="field">
+          <label for="f-dept">Department</label>
+          <select id="f-dept">
+            <option value="">Select your department</option>
+            <option>CSE</option><option>ECE</option><option>EEE</option>
+            <option>MECH</option><option>CIVIL</option><option>IT</option>
+            <option>AIDS</option><option>AIML</option>
+          </select>
+          <div class="err-msg" id="e-dept">Please select your department</div>
+        </div>
+
+        <button type="submit" class="submit-btn">Claim Your Victory! 🏆</button>
+      </form>
+    </div>
+  </div>
+
+</div><!-- /#main-screen -->
+
+<!-- ═══ SCREEN 2: VICTORY ═══ -->
+<div id="victory">
+  <div class="v-card">
+    <span class="trophy">🏆</span>
+    <div class="v-eyebrow">Victory Confirmed</div>
+    <div class="v-headline">You Found The Treasure!</div>
+    <div class="v-name-box">
+      <div class="v-name-label">Champion</div>
+      <div class="v-name" id="v-name">Winner</div>
+    </div>
+    <div class="v-msg" id="v-msg">
+      You are officially the <strong>Treasure Hunt Champion!</strong><br>
+      Your details have been recorded. Congratulations! 🎊
+    </div>
+    <div class="v-divider"><span>★</span></div>
+    <span class="v-emojis">🎉 🎊 🎉</span>
+  </div>
+</div>
+
+<div id="sound-hint">🔊 Tap anywhere to enable sound</div>
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════
+   1. CANVAS & RESIZE
+════════════════════════════════════════ */
+const CV = document.getElementById('canvas');
+const cx = CV.getContext('2d');
+let W, H;
+
+function resize() {
+  W = CV.width  = window.innerWidth;
+  H = CV.height = window.innerHeight;
+  buildStars();
+}
+window.addEventListener('resize', resize);
+
+/* Static starfield */
+let stars = [];
+function buildStars() {
+  stars = [];
+  for (let i = 0; i < 190; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: Math.random() * 1.5 + .12,
+      a: Math.random() * .65 + .1,
+      tw: Math.random() > .65, // twinkle?
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+}
+
+/* Palette */
+const COLS = [
+  '#FF4500','#FF6B35','#FFD700','#FF1493','#00BFFF',
+  '#7B68EE','#00FF7F','#FF69B4','#FFA500','#ADFF2F',
+  '#E040FB','#00E5FF','#FF0066','#66FF00','#FF9800'
+];
+const rc = () => COLS[Math.random() * COLS.length | 0];
+
+/* ════════════════════════════════════════
+   2. PARTICLE CLASSES
+════════════════════════════════════════ */
+
+/** Rocket — rises, explodes at peak */
+class Rocket {
+  constructor() {
+    this.x   = W * .08 + Math.random() * W * .84;
+    this.y   = H + 14;
+    this.tY  = H * .08 + Math.random() * H * .44;
+    this.vx  = (Math.random() - .5) * 2.8;
+    this.vy  = -(9.5 + Math.random() * 5.5);
+    this.c   = rc(); this.c2 = rc();
+    this.sz  = 2.2 + Math.random() * 2;
+    this.trail = [];
+    this.alive = true; this.done = false;
+  }
+  step() {
+    if (!this.alive) return;
+    this.trail.push({ x: this.x, y: this.y });
+    if (this.trail.length > 26) this.trail.shift();
+    this.vy += .13; this.x += this.vx; this.y += this.vy;
+    if (this.vy >= 0 || this.y <= this.tY) this.boom();
+  }
+  boom() {
+    if (this.done) return;
+    this.done = true; this.alive = false;
+    sfxBoom();
+    const n = 90 + (Math.random() * 65 | 0);
+    const t = Math.random();
+    for (let i = 0; i < n; i++) {
+      let a, sp;
+      if      (t < .33) { a = Math.random() * 6.283; sp = Math.random() * 9 + 1; }
+      else if (t < .66) { a = (6.283 / n) * i; sp = 5 + Math.random() * 2.5; }
+      else              { a = (6.283 / n) * i; sp = i % 2 === 0 ? 7.5 + Math.random() * 3 : 2.5 + Math.random(); }
+      PX.push(new FirePx(this.x, this.y, Math.cos(a) * sp, Math.sin(a) * sp, this.c, this.c2));
+    }
+    for (let i = 0; i < 24; i++) PX.push(new SpkPx(this.x, this.y, this.c));
+  }
+  draw() {
+    for (let i = 0; i < this.trail.length; i++) {
+      const p = this.trail[i];
+      const a = (i / this.trail.length) * .58;
+      const r = this.sz * (i / this.trail.length);
+      cx.beginPath(); cx.arc(p.x, p.y, r, 0, 6.283);
+      cx.fillStyle = `rgba(255,255,210,${a})`; cx.fill();
+    }
+    cx.beginPath(); cx.arc(this.x, this.y, this.sz, 0, 6.283);
+    cx.shadowBlur = 14; cx.shadowColor = this.c;
+    cx.fillStyle = '#fff'; cx.fill(); cx.shadowBlur = 0;
+  }
+}
+
+/** Explosion particle */
+class FirePx {
+  constructor(x, y, vx, vy, c, c2) {
+    this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.c=c; this.c2=c2;
+    this.a   = 1;
+    this.dec = .01 + Math.random() * .013;
+    this.sz  = 1.6 + Math.random() * 2.5;
+    this.tr  = Math.random() > .42;
+    this.trail = [];
+  }
+  step() {
+    if (this.tr) {
+      this.trail.push({ x: this.x, y: this.y });
+      if (this.trail.length > 6) this.trail.shift();
+    }
+    this.x += this.vx; this.y += this.vy;
+    this.vy += .052; this.vx *= .983; this.vy *= .983;
+    this.a  -= this.dec;
+    return this.a > 0;
+  }
+  draw() {
+    cx.save(); cx.globalAlpha = this.a;
+    if (this.tr && this.trail.length > 1) {
+      for (let i = 0; i < this.trail.length; i++) {
+        cx.globalAlpha = (i / this.trail.length) * this.a * .38;
+        cx.beginPath(); cx.arc(this.trail[i].x, this.trail[i].y, this.sz * .4, 0, 6.283);
+        cx.fillStyle = this.c; cx.fill();
+      }
+      cx.globalAlpha = this.a;
+    }
+    cx.beginPath(); cx.arc(this.x, this.y, this.sz, 0, 6.283);
+    cx.shadowBlur = 5; cx.shadowColor = this.c;
+    cx.fillStyle = this.a > .5 ? this.c2 : this.c;
+    cx.fill(); cx.shadowBlur = 0; cx.restore();
+  }
+}
+
+/** Sparkle — 4-pointed star */
+class SpkPx {
+  constructor(x, y, c) {
+    this.x=x; this.y=y;
+    this.vx = (Math.random() - .5) * 18; this.vy = (Math.random() - .5) * 18;
+    this.c=c; this.a=1;
+    this.sz  = 2 + Math.random() * 3;
+    this.dec = .045 + Math.random() * .04;
+    this.rot = Math.random() * 6.283;
+    this.rs  = (Math.random() - .5) * .32;
+  }
+  step() {
+    this.x += this.vx; this.y += this.vy;
+    this.vy += .12; this.vx *= .96; this.vy *= .96;
+    this.a -= this.dec; this.rot += this.rs;
+    return this.a > 0;
+  }
+  draw() {
+    cx.save(); cx.globalAlpha = this.a;
+    cx.translate(this.x, this.y); cx.rotate(this.rot);
+    cx.shadowBlur = 5; cx.shadowColor = this.c; cx.fillStyle = '#fff';
+    const s = this.sz * 2.6;
+    cx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * 6.283;
+      cx.lineTo(Math.cos(a) * s, Math.sin(a) * s);
+      cx.lineTo(Math.cos(a + .785) * s * .33, Math.sin(a + .785) * s * .33);
+    }
+    cx.closePath(); cx.fill(); cx.shadowBlur = 0; cx.restore();
+  }
+}
+
+/** Confetti piece */
+class Cfti {
+  constructor(fromTop) {
+    this.x  = Math.random() * W;
+    this.y  = fromTop ? -22 : Math.random() * H * .35 - 50;
+    this.sz = 5 + Math.random() * 10;
+    this.c  = rc();
+    this.vy = 2 + Math.random() * 3.2; this.vx = (Math.random() - .5) * 3;
+    this.rot = Math.random() * 6.283; this.rs = (Math.random() - .5) * .18;
+    this.rct = Math.random() > .42; this.a = 1;
+  }
+  step() {
+    this.x += this.vx; this.y += this.vy; this.vy += .018; this.rot += this.rs;
+    if (this.y > H + 32) this.a = 0;
+    return this.a > 0;
+  }
+  draw() {
+    cx.save(); cx.globalAlpha = this.a;
+    cx.translate(this.x, this.y); cx.rotate(this.rot); cx.fillStyle = this.c;
+    if (this.rct) cx.fillRect(-this.sz / 2, -this.sz / 4, this.sz, this.sz / 2);
+    else { cx.beginPath(); cx.arc(0, 0, this.sz / 2, 0, 6.283); cx.fill(); }
+    cx.restore();
+  }
+}
+
+/* ════════════════════════════════════════
+   3. ANIMATION LOOP
+════════════════════════════════════════ */
+let RK = [], PX = [], CF = [];
+let frame = 0;
+let phase = 'intense'; // 'intense' | 'slow' | 'victory'
+
+function launch() {
+  const max = { intense: 7, slow: 3, victory: 6 }[phase] ?? 4;
+  if (RK.length < max) { RK.push(new Rocket()); sfxLaunch(); }
+}
+function spawnCfti(n, ft) { for (let i = 0; i < n; i++) CF.push(new Cfti(ft)); }
+
+let sf = 0; // star flicker counter
+function loop() {
+  requestAnimationFrame(loop);
+  cx.fillStyle = 'rgba(5,9,26,.17)';
+  cx.fillRect(0, 0, W, H);
+
+  /* Twinkle stars */
+  sf++;
+  for (const s of stars) {
+    const a = s.tw ? s.a * (.65 + .35 * Math.sin(sf * .028 + s.phase)) : s.a;
+    cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 6.283);
+    cx.fillStyle = `rgba(255,255,255,${a})`; cx.fill();
+  }
+
+  frame++;
+  const iv = { intense: 34, slow: 88, victory: 50 }[phase] ?? 60;
+  if (frame % iv === 0) {
+    launch();
+    if (phase === 'intense' && Math.random() > .45) launch();
+  }
+
+  if (phase === 'intense' && frame % 4 === 0) spawnCfti(3, true);
+  if (phase === 'victory'  && frame % 5 === 0) spawnCfti(4, true);
+
+  /* Update / draw each pool */
+  RK = RK.filter(r => { r.step(); if (r.alive) r.draw(); return r.alive; });
+  PX = PX.filter(p => { const ok = p.step(); if (ok) p.draw(); return ok; });
+  CF = CF.filter(c => { const ok = c.step(); if (ok) c.draw(); return ok; });
+}
+
+resize();
+loop();
+
+/* Instant burst on load */
+[150, 650, 1200].forEach(ms => setTimeout(launch, ms));
+
+/* ════════════════════════════════════════
+   4. WEB AUDIO (zero external files)
+════════════════════════════════════════ */
+let AC = null, sndOn = false;
+
+function initAudio() {
+  if (!AC) {
+    try {
+      AC = new (window.AudioContext || window.webkitAudioContext)();
+      sndOn = true;
+      document.getElementById('sound-hint').style.opacity = '0';
+    } catch (e) {}
+  }
+  if (AC && AC.state === 'suspended') AC.resume();
+}
+document.addEventListener('click',      initAudio);
+document.addEventListener('touchstart', initAudio, { passive: true });
+
+function sfxLaunch() {
+  if (!AC || !sndOn) return;
+  try {
+    const now = AC.currentTime;
+    const osc = AC.createOscillator(), g = AC.createGain();
+    osc.connect(g); g.connect(AC.destination);
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(950, now + .44);
+    g.gain.setValueAtTime(0, now);
+    g.gain.linearRampToValueAtTime(.1, now + .04);
+    g.gain.exponentialRampToValueAtTime(.001, now + .5);
+    osc.start(now); osc.stop(now + .5);
+  } catch (e) {}
+}
+
+function sfxBoom() {
+  if (!AC || !sndOn) return;
+  try {
+    const now = AC.currentTime;
+    /* noise burst */
+    const bs  = AC.sampleRate * .42 | 0;
+    const buf = AC.createBuffer(1, bs, AC.sampleRate);
+    const d   = buf.getChannelData(0);
+    for (let i = 0; i < bs; i++)
+      d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bs, 1.9);
+    const ns = AC.createBufferSource(); ns.buffer = buf;
+    const bp = AC.createBiquadFilter();
+    bp.type = 'bandpass'; bp.frequency.value = 700 + Math.random() * 450; bp.Q.value = .28;
+    const gn = AC.createGain();
+    gn.gain.setValueAtTime(.34, now);
+    gn.gain.exponentialRampToValueAtTime(.001, now + .42);
+    ns.connect(bp); bp.connect(gn); gn.connect(AC.destination); ns.start(now);
+    /* low thump */
+    const osc = AC.createOscillator(), go = AC.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(95, now);
+    osc.frequency.exponentialRampToValueAtTime(24, now + .26);
+    go.gain.setValueAtTime(.5, now);
+    go.gain.exponentialRampToValueAtTime(.001, now + .26);
+    osc.connect(go); go.connect(AC.destination); osc.start(now); osc.stop(now + .28);
+  } catch (e) {}
+}
+
+function sfxFanfare() {
+  if (!AC || !sndOn) return;
+  try {
+    const notes = [261.63, 329.63, 392, 523.25, 659.25];
+    const durs  = [.15, .15, .15, .18, .65];
+    let t = AC.currentTime + .06;
+    notes.forEach((f, i) => {
+      const osc = AC.createOscillator(), g = AC.createGain();
+      osc.connect(g); g.connect(AC.destination);
+      osc.type = 'triangle'; osc.frequency.value = f;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.26, t + .022);
+      g.gain.exponentialRampToValueAtTime(.001, t + durs[i]);
+      osc.start(t); osc.stop(t + durs[i] + .08);
+      t += durs[i];
+    });
+    for (let i = 0; i < 7; i++) setTimeout(sfxBoom, i * 210);
+  } catch (e) {}
+}
+
+/* ════════════════════════════════════════
+   5. COUNTDOWN (20 seconds)
+════════════════════════════════════════ */
+let cdLeft = 20;
+const cdNum  = document.getElementById('cd-num');
+const progBar= document.getElementById('prog-bar');
+const cdArea = document.getElementById('cd-area');
+const formWrap = document.getElementById('form-wrap');
+
+const cdTimer = setInterval(() => {
+  cdLeft--;
+  cdNum.textContent = cdLeft;
+  progBar.style.width = (cdLeft / 20 * 100) + '%';
+  if (cdLeft <= 0) { clearInterval(cdTimer); revealForm(); }
+}, 1000);
+
+function revealForm() {
+  /* fade countdown out */
+  cdArea.style.transition = 'opacity .55s';
+  cdArea.style.opacity = '0';
+  setTimeout(() => {
+    cdArea.style.display = 'none';
+    formWrap.classList.add('show');
+    /* nudge page to show form on mobile */
+    setTimeout(() => formWrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 120);
+  }, 550);
+  phase = 'slow';
+}
+
+/* ════════════════════════════════════════
+   6. FORM VALIDATION & SUBMIT
+════════════════════════════════════════ */
+const FIELDS = [
+  { id: 'f-name', err: 'e-name' },
+  { id: 'f-year', err: 'e-year' },
+  { id: 'f-reg',  err: 'e-reg'  },
+  { id: 'f-sec',  err: 'e-sec'  },
+  { id: 'f-dept', err: 'e-dept' }
+];
+
+function chk(fid, eid) {
+  const el = document.getElementById(fid);
+  const em = document.getElementById(eid);
+  const ok = el.value.trim() !== '';
+  el.classList.toggle('err', !ok);
+  em.classList.toggle('on',  !ok);
+  return ok;
+}
+
+FIELDS.forEach(({ id, err }) => {
+  const el = document.getElementById(id);
+  el.addEventListener('blur',   () => chk(id, err));
+  el.addEventListener('change', () => chk(id, err));
+  el.addEventListener('input',  () => { if (el.classList.contains('err')) chk(id, err); });
+});
+
+/* ── Formspree endpoint ──────────────────────────────────────
+   1. Go to https://formspree.io  →  Sign up free
+   2. Click "+ New Form"  →  set email to jvrdhnreddy@gmail.com
+   3. Replace YOUR_FORM_ID below with your form ID (e.g. xnqkkerd)
+──────────────────────────────────────────────────────────── */
+const FORMSPREE_ID = 'xbdpjlvp';
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  setTimeout(() => t.classList.remove('on'), dur);
+}
+
+document.getElementById('form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  initAudio();
+  if (!FIELDS.map(({ id, err }) => chk(id, err)).every(Boolean)) return;
+
+  const name = document.getElementById('f-name').value.trim();
+  const year = document.getElementById('f-year').value;
+  const reg  = document.getElementById('f-reg').value.trim();
+  const sec  = document.getElementById('f-sec').value.trim();
+  const dept = document.getElementById('f-dept').value;
+  const btn  = document.querySelector('.submit-btn');
+
+  /* Show victory immediately — don't make winner wait */
+  showVictory(name, year);
+
+  /* Send to Formspree in background */
+  if (FORMSPREE_ID !== 'YOUR_FORM_ID') {
+    btn.disabled = true;
+    btn.classList.add('loading');
+    try {
+      const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          'Full Name':       name,
+          'Year':            year,
+          'Register Number': reg,
+          'Section':         sec,
+          'Department':      dept,
+          'Submitted At':    new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+        })
+      });
+      if (!res.ok) throw new Error('Send failed');
+    } catch {
+      showToast('⚠️ Could not send details — check internet connection');
+    } finally {
+      btn.disabled = false;
+      btn.classList.remove('loading');
+    }
+  }
+});
+
+/* ════════════════════════════════════════
+   7. VICTORY SCREEN
+════════════════════════════════════════ */
+function showVictory(name, year) {
+  phase = 'victory';
+
+  /* rocket burst */
+  for (let i = 0; i < 9; i++)
+    setTimeout(() => { RK.push(new Rocket()); sfxLaunch(); }, i * 160);
+
+  /* confetti storm */
+  for (let i = 0; i < 38; i++)
+    setTimeout(() => spawnCfti(12, true), i * 80);
+
+  /* fanfare */
+  setTimeout(sfxFanfare, 380);
+
+  /* populate */
+  document.getElementById('v-name').textContent = name;
+  document.getElementById('v-msg').innerHTML =
+    `You are officially the <strong>Treasure Hunt Champion of ${year}!</strong><br>
+     Your details have been recorded. Congratulations, ${name}! 🎊`;
+
+  document.getElementById('victory').classList.add('on');
+}
+</script>
+</body>
+</html>
